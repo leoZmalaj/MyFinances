@@ -1,0 +1,91 @@
+﻿<link href="~/css/login.css" rel="stylesheet" />
+
+<div id="loginPartialId" class="modal">
+    <form class="modal-content animate" style="width:30%;">
+        <div class="imgcontainer">
+            <span onclick="document.getElementById('loginPartialId').style.display='none'" style="margin-top:-6%;right:1px;" class="close" title="Close Modal">&times;</span>
+            <img src="~/images/myLogo.png" width="30%;" />
+        </div>
+
+        <div style="width:100%;" class="container">
+
+            <label for="uname"><b>Username</b></label>
+            <input type="text" placeholder="Enter Username" id="username" required>
+
+            <label for="psw"><b>Password</b></label>
+            <input type="password" placeholder="Enter Password" id="password" required>
+
+            <button onclick="Login()" type="button">Login</button>
+        </div>
+
+        <div class="container" style="background-color:#f1f1f1;width:100%;">
+            <button type="button" onclick="document.getElementById('loginPartialId').style.display='none'" class="cancelbtn">Cancel</button>
+            <span class="psw">Forgot <a href="#">password?</a></span><br />
+            <span  class="psw"> <a style="float:right;position:absolute;" href="#" onclick="signUp()" >Sign Up</a></span>
+        </div>
+    </form>
+</div>
+<script>
+    // Get the modal
+    var modal = document.getElementById('loginPartialId');
+    var isInputOk = false;
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    //singp
+    function signUp() {
+        document.getElementById('loginPartialId').style.display = 'none';
+        document.getElementById('id01').style.display = 'block';
+    }
+    //check the input 
+    function checkInput() {
+        var username = $("#username").val();
+        var pass = $("#password").val();
+        if (username == "") {
+            isInputOk = false;
+            $("#username").css("border", "2px solid red");
+            returnError("Please fill username filld!");
+        } else {
+            isInputOk = true;
+            $("#username").css("border", "1px solid gray");
+        }
+        if (pass == "") {
+            isInputOk = false;
+            $("#password").css("border", "2px solid red");
+            returnError("Please fill password fild!");
+        } else {
+            isInputOk = true;
+            $("#password").css("border", "1px solid gray");
+        }
+    }
+    //login
+    function Login() {
+        checkInput();
+        if (isInputOk) {
+            var model = {
+                "UserName": $("#username").val(),
+                "Password": $("#password").val()
+            }
+            $.ajax({
+                url: "/Login/UserLogin",
+                type: "POST",
+                data: model,
+                dataType: "json",
+                success: function (data) {
+                    if (data) {
+                        window.location.href = "/Home";
+                    }
+                    else {
+                        returnError("Username or password is wrong !");
+                    }
+                },
+                error: function (error) {
+                    returnError(error);
+                }
+            });
+        }
+    }
+</script>

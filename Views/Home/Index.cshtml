@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="bg">
+
+</div>
+<script>
+    $(document).ready(function () {
+        var nr =@(TempData["login"] == null ? 0 : 1);
+        if (nr == 1)
+        {
+        $("#loginPartialId").css("display", "block");
+        }
+    });
+</script>
+<style>
+    .dataTables_wrapper .dataTables_filter input {
+          width: 300px;
+      }
+
+    .bg {
+        height: 680px;
+        margin-top: -2%;
+        background-image: url('/images/newHomepage.png');
+      /* Center and scale the image nicely */
+      background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+</style>
+

@@ -1,0 +1,317 @@
+﻿@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container">
+    <div id="CreateOrUpdate" class="modal">
+
+        <form class="modal-content" style="width:30%;padding:15px;">
+            <span onclick="document.getElementById('CreateOrUpdate').style.display='none'" style="right:1px;" class="close" title="Close Modal">&times;</span>
+            <span id="operationType" style="margin-left:44%;font-weight:900;font-size:20px;font-family:initial;"></span>
+            <span hidden id="tableId"></span>
+            <span hidden id="userId"></span>
+            <input type="number" hidden id="amountLeft"/>
+            <div class="container" style="width:100%;">
+                <div class="row">
+                    <div class="col-6">
+                        <label style="float:left">Came From</label>
+                        <input type="text" id="cameFrom" style="background:white" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label style="float:left">Date Take</label>
+                        <input id="dateTake" type="datetime-local" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div hidden id="amountsDiv" class="col-6">
+                        <label style="float:left">Amounts</label>
+                        <input id="amounts" type="number" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                              <label style="float:left">Amount Spent</label>
+                        <input id="amountSpent" type="number" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label style="float:left">Spent On</label>
+                        <input id="spentOn" type="text" style="background:white" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="container" s style="background-color:#f1f1f1;width:100%;">
+                <button type="button" onclick="document.getElementById('CreateOrUpdate').style.display='none'" class="cancelbtn">Cancel</button>
+                <button type="button" hidden style="float:right;background-color:green;" id="unpateBtn" onclick="AddOrUpdateElement(1)" class="cancelbtn">Save</button>
+                <button type="button" hidden style="float:right;background-color:green;" id="createBtn" onclick="AddOrUpdateElement(2)" class="cancelbtn">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <table id="budgetTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th style="cursor:pointer;font-weight:900;" onclick="opentAddNew()">+</th>
+                <th hidden>Id</th>
+                <th hidden>UserId</th>
+                <th>CameFrom</th>
+                <th>DateTake</th>
+                <th>DateInsert</th>
+                <th>Amounts</th>
+                <th>UpdateDate</th>
+                <th>AmountSpent</th>
+                <th>SpentOn</th>
+                <th>AmountLeft</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th><span style="font-weight:900;color:gray;">Total</span></th>
+                <th ></th>
+                <th ></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th><input id="totalAmounts" style="height:20px;text-align:center;width:100px;" disabled type="text" /></th>
+                <th></th>
+                <th><input id="totalSpent" style="height:20px;text-align:center;width:100px;" disabled type="text" /></th>
+                <th></th>
+                <th><input id="totalLeft" style="height:20px;text-align:center;width:100px;" disabled type="text" /></th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+<script type="text/javascript">
+    var cameFrom = null;
+    var dateTake = null;
+    var amounts = null;
+    var spentOn = null;
+    var model;
+    var isPopupInputOK = true;
+    var TotalAmountLeft = 0;
+    var TotalAmounts = 0;
+    var TotalAmountSpent = 0;
+    //open create popup
+    function opentAddNew() {
+        clearPopup();
+        $("#operationType").css("margin-left", "39%");
+        $("#operationType").text("Create New");
+        $("#CreateOrUpdate").css("display", "block");
+        $("#unpateBtn").attr("hidden", true);
+        $("#createBtn").removeAttr("hidden");
+        $("#amountsDiv").removeAttr("hidden");
+    }
+    //create new element
+    function AddOrUpdateElement(opNr) {
+        checkPopupInput();
+        getPopupData();
+        //update
+        if (opNr == 1) {
+            if ($("#amountSpent").val() > $("#amountLeft").val()) {
+                isPopupInputOK = false;
+                returnError("Can't Amount Spent be bigger the Amount Left !");
+            } else {
+                isPopupInputOK = true;
+            }
+            if (isPopupInputOK) {
+
+                updateRow();
+            } 
+        }
+        else {
+            if ($("#amountSpent").val() > $("#amounts").val()) {
+                isPopupInputOK = false;
+                returnError("Can't amount Spent be bigger the amounts !");
+            } else{
+                isPopupInputOK = true;
+            }
+            //create
+            if (isPopupInputOK) {
+               
+                createNew();
+            }
+        }
+    }
+    //clear the popup data
+    function clearPopup() {
+        $("#cameFrom").val("");
+        $("#dateTake").val("");
+        $("#amounts").val("");
+        $("#spentOn").val("");
+        $("#AmountSpent").val("");
+        $("#amounts").css("border", "1px solid gray");
+        $("#amountSpent").css("border", "1px solid gray");
+        $("#cameFrom").css("border", "1px solid gray");
+    }
+    //get data from popup
+    function getPopupData() {
+        model = {
+            "Id": $("#tableId").val(),
+            "UserId": $("#userId").val(),
+            "CameFrom": $("#cameFrom").val(),
+            "DateTake": $("#dateTake").val(),
+            "Amounts": $("#amounts").val(),
+            "SpentOn": $("#spentOn").val(),
+            "AmountSpent": $("#amountSpent").val(),
+            "AmountLeft": $("#amountLeft").val()
+        }
+    }
+    //open edit popup
+    function EditRow(userId, id, cameFrom, dateTake, amount, spentOn, amountspent,amountLeft) {
+        $("#amountsDiv").attr("hidden", true);
+        $("#CreateOrUpdate").css("display", "block");
+        $("#operationType").text("Update");
+        $("#unpateBtn").removeAttr("hidden");
+        $("#createBtn").attr("hidden", true);
+        $("#userId").val(userId);
+        $("#cameFrom").val(cameFrom);
+        $("#dateTake").val(dateTake);
+        $("#amounts").val(amount);
+        $("#spentOn").val(spentOn);
+        $("#tableId").val(id);
+        $("#amountSpent").val(amountspent); 
+        $("#amountLeft").val(amountLeft); 
+    }
+    $(document).ready(function () {
+        loadTable();
+        $("#budgetTable_wrapper").css("margin-top", "1%");
+        $("#budgetTable_wrapper").css("margin-bottom", "3%");
+
+
+    });
+    //fill the table with data
+    function loadTable() {
+        $.ajax({
+            url: "/Home/FillBudgetTable",
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                $('#budgetTable').DataTable({
+                    "scrollX": true,
+                    "aaData": data,
+                    "sPaginationType": "full_numbers", //Enable smooth theme
+                    "sDom": 'lfrtip',
+                    "columnDefs": [
+                        { "className": "dt-center", "targets": "_all" }
+                    ],
+                    "columns": [
+                        {
+                            "render": function (data, type, row) {
+                                $("#totalLeft").val(row.totalAmountLeft);
+                                $("#totalAmounts").val(row.totalAmounts);
+                                $("#totalSpent").val(row.totalAmountSpent);
+                                return "<img  onclick=\"EditRow(" + row.userId + "," + row.id + ",'" + row.cameFrom + "','" + row.dateTake + "'," + row.amounts + ",'" + row.spentOn + "'," + row.amountSpent + "," + row.amountLeft+")\" src=\"/images/edit.png\" /><br/> <img onclick=\"DeleteRow(" + row.id + ")\" src =\"/images/delete.png\" />";
+                            }
+                        },
+                        { "data": "id", "visible": false, },
+                        { "data": "userId", "visible": false, },
+                        { "data": "cameFrom" },
+                        { "data": "dateTake" },
+                        { "data": "dateInsert" },
+                        { "data": "amounts" },
+                        { "data": "updateDate" },
+                        { "data": "amountSpent" },
+                        { "data": "spentOn" },
+                        { "data": "amountLeft" }
+
+                    ]
+                })
+
+            },
+            error: function (error) {
+                returnError(error);
+            }
+        });
+    }
+
+    //check the input
+    function checkPopupInput() {
+        var amounts = $("#amounts").val();
+        var cameFrom = $("#cameFrom").val();
+      
+        if (amounts == "") {
+            isPopupInputOK = false;
+            $("#amounts").css("border", "2px solid red");
+            returnError("Please fill amounts filld!");
+        } else {
+            //isPopupInputOK = true;
+            $("#amounts").css("border", "1px solid gray");
+        }
+        if (cameFrom == "") {
+            isPopupInputOK = false;
+            $("#cameFrom").css("border", "2px solid red");
+            returnError("Please fill came From fild!");
+        } else {
+            //isPopupInputOK = true;
+            $("#cameFrom").css("border", "1px solid gray");
+        }
+       
+
+    }
+    //delete row
+    function DeleteRow(id) {
+        $.ajax({
+            url: "/Home/DeleteFinance?id=" + id,
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                if (data) {
+                    $('#budgetTable').DataTable().destroy();
+                    loadTable();
+                    returnSuccess("Deteted succesfuly!");
+                }
+                else {
+                    returnError("I can't delte!");
+                }
+            },
+            error: function (error) {
+                returnError(error);
+            }
+        });
+    }
+
+    //update row
+    function updateRow() {
+        $.ajax({
+            url: "/Home/UpdateTable",
+            type: "POST",
+            data: model,
+            dataType: "json",
+            success: function (data) {
+                if (data) {
+                    $('#budgetTable').DataTable().destroy();
+                    loadTable();
+                    document.getElementById('CreateOrUpdate').style.display = 'none';
+                    returnSuccess("Sucessfuly updated!");
+                }
+                else {
+                    returnError("I can't update!");
+                }
+            },
+            error: function (error) {
+                returnError(error);
+            }
+        });
+    }
+
+    //create new element
+    function createNew() {
+        $.ajax({
+            url: "/Home/CreateNew",
+            type: "POST",
+            data: model,
+            dataType: "json",
+            success: function (data) {
+                if (data) {
+                    $('#budgetTable').DataTable().destroy();
+                    loadTable();
+                    document.getElementById('CreateOrUpdate').style.display = 'none';
+                    returnSuccess("Sucessfuly create!");
+                }
+                else {
+                    returnError("Can't create!");
+                }
+            },
+            error: function (error) {
+                returnError(error);
+            }
+        });
+    }
+</script>
